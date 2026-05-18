@@ -1,5 +1,7 @@
+import asyncio
 import os
 import sys
+import time
 import uuid
 
 import pandas as pd
@@ -83,10 +85,14 @@ def main() -> None:
     with st.chat_message("assistant"):
         with st.spinner("Thinking and gathering travel data..."):
             try:
-                result = graph.invoke(
-                    {"messages": [HumanMessage(content=prompt)]},
-                    config={"configurable": {"thread_id": st.session_state.thread_id}},
+                start = time.perf_counter()
+                result = asyncio.run(
+                    graph.ainvoke(
+                        {"messages": [HumanMessage(content=prompt)]},
+                        config={"configurable": {"thread_id": st.session_state.thread_id}},
+                    )
                 )
+                latency = time.perf_counter() - start
             except ValueError as exc:
                 st.error(str(exc))
                 return
@@ -95,6 +101,7 @@ def main() -> None:
             st.error("The assistant could not produce a structured response.")
             return
 
+        st.metric("Response Time", f"{latency:.2f}s")
         st.subheader(payload["city"])
         st.write(payload["city_summary"])
         st.caption(f"Source path: {payload['source']}")

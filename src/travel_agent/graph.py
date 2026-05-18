@@ -211,13 +211,18 @@ def weather_fanout(_: TravelState) -> TravelState:
     return {}
 
 
-def fetch_weather(state: TravelState) -> TravelState:
-    forecast = get_weather_forecast(state["city"], days=state.get("weather_days", 5))
+async def fetch_weather(state: TravelState) -> TravelState:
+    forecast = await get_weather_forecast(state["city"], days=state.get("weather_days", 5))
     return {"weather_forecast": forecast}
 
 
-def fetch_images(state: TravelState) -> TravelState:
-    return {"image_urls": get_location_images(state["city"], count=4)}
+async def fetch_images(state: TravelState) -> TravelState:
+    images = await get_location_images(state["city"], count=4)
+    return {"image_urls": images}
+
+
+def aggregate_results(state: TravelState) -> TravelState:
+    return state
 
 
 def finalize_response(state: TravelState) -> TravelState:
@@ -254,6 +259,7 @@ def build_workflow(model_name: str = "llama-3.3-70b-versatile") -> StateGraph:
     graph.add_node("fetch_weather", fetch_weather)
     graph.add_node("fetch_weather_only", fetch_weather)
     graph.add_node("fetch_images", fetch_images)
+    graph.add_node("aggregate_results", aggregate_results)
     graph.add_node("finalize_response", finalize_response)
     graph.add_node("finalize_weather_only", finalize_weather_only)
 
@@ -271,8 +277,9 @@ def build_workflow(model_name: str = "llama-3.3-70b-versatile") -> StateGraph:
     graph.add_edge("summarize_from_web", "weather_fanout")
     graph.add_edge("weather_fanout", "fetch_weather")
     graph.add_edge("weather_fanout", "fetch_images")
-    graph.add_edge("fetch_weather", "finalize_response")
-    graph.add_edge("fetch_images", "finalize_response")
+    graph.add_edge("fetch_weather", "aggregate_results")
+    graph.add_edge("fetch_images", "aggregate_results")
+    graph.add_edge("aggregate_results", "finalize_response")
     graph.add_edge("fetch_weather_only", "finalize_weather_only")
     graph.add_edge("finalize_response", END)
     graph.add_edge("finalize_weather_only", END)

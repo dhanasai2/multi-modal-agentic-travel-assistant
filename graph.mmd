@@ -12,12 +12,14 @@ graph TD;
 	fetch_weather(fetch_weather)
 	fetch_weather_only(fetch_weather_only)
 	fetch_images(fetch_images)
+	aggregate_results(aggregate_results)
 	finalize_response(finalize_response)
 	finalize_weather_only(finalize_weather_only)
 	__end__([<p>__end__</p>]):::last
 	__start__ --> prepare_context;
-	fetch_images --> finalize_response;
-	fetch_weather --> finalize_response;
+	aggregate_results --> finalize_response;
+	fetch_images --> aggregate_results;
+	fetch_weather --> aggregate_results;
 	fetch_weather_only --> finalize_weather_only;
 	prepare_context -. &nbsp;weather_only&nbsp; .-> fetch_weather_only;
 	prepare_context -. &nbsp;vector&nbsp; .-> summarize_from_vector;

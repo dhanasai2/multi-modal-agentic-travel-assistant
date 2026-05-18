@@ -1,3 +1,4 @@
+import asyncio
 import random
 import time
 from datetime import datetime, timedelta
@@ -45,6 +46,10 @@ def _simulate_latency(min_seconds: float = 0.2, max_seconds: float = 0.7) -> Non
     time.sleep(random.uniform(min_seconds, max_seconds))
 
 
+async def _simulate_latency_async(min_seconds: float = 0.2, max_seconds: float = 0.7) -> None:
+    await asyncio.sleep(random.uniform(min_seconds, max_seconds))
+
+
 def mock_web_search(city: str) -> str:
     _simulate_latency()
     key = city.strip().lower()
@@ -56,8 +61,8 @@ def mock_web_search(city: str) -> str:
     )
 
 
-def get_location_images(city: str, count: int = 4) -> list[str]:
-    _simulate_latency()
+async def get_location_images(city: str, count: int = 4) -> list[str]:
+    await _simulate_latency_async()
     key = city.strip().lower()
     if key in KNOWN_IMAGE_SETS:
         urls = KNOWN_IMAGE_SETS[key]
@@ -71,8 +76,8 @@ def get_location_images(city: str, count: int = 4) -> list[str]:
     return urls[: max(1, min(count, len(urls)))]
 
 
-def get_weather_forecast(city: str, days: int = 7) -> list[dict]:
-    _simulate_latency()
+async def get_weather_forecast(city: str, days: int = 7) -> list[dict]:
+    await _simulate_latency_async()
     safe_days = max(1, min(days, 7))
     seed = sum(ord(ch) for ch in city.lower())
     rnd = random.Random(seed)
